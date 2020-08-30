@@ -1,5 +1,11 @@
 <?php
+require_once("includes/config.php");
 require_once("includes/classes/FormSanitizer.php");
+require_once("includes/classes/Constants.php");
+require_once("includes/classes/Account.php");
+
+    $account = new Account($con);
+
     if(isset($_POST["submitButton"]))
     {
         $firstName = FormSanitizer::sanitizeFormString($_POST["firstName"]);
@@ -10,8 +16,22 @@ require_once("includes/classes/FormSanitizer.php");
         $password = FormSanitizer::sanitizeFormPassword($_POST["password"]);
         $password2 = FormSanitizer::sanitizeFormPassword($_POST["password2"]);
 
+        $success = $account->register($firstName, $lastName, $username, $email, $email2, $password, $password2);
+
+        if($success)
+        {
+            $_SESSION["userLoggedIn"] = $username;
+            header("Location: index.php");
+        }
     }
 
+function getInputValue($name)
+{
+    if(isset($_POST[$name]))
+    {
+        echo $_POST[$name];
+    }
+}
     
 ?>
 <!DOCTYPE html>
@@ -34,16 +54,25 @@ require_once("includes/classes/FormSanitizer.php");
             
                 <form method="POST">
 
-                    <input type="text" name="firstName" placeholder="Имя" required>
+                    <?php echo $account->getError(Constants::$firstNameCharacters); ?>
+                    <input type="text" name="firstName" placeholder="Имя" value="<?php getInputValue("firstName"); ?>" required>
 
-                    <input type="text" name="lastName" placeholder="Фамилия" required>
+                    <?php echo $account->getError(Constants::$lastNameCharacters); ?>
+                    <input type="text" name="lastName" placeholder="Фамилия" value="<?php getInputValue("lastName"); ?>" required>
 
-                    <input type="text" name="username" placeholder="Имя пользователя" required>
+                    <?php echo $account->getError(Constants::$usernameCharacters); ?>
+                    <?php echo $account->getError(Constants::$usernameTaken); ?>
+                    <input type="text" name="username" placeholder="Имя пользователя" value="<?php getInputValue("username"); ?>" required>
 
-                    <input type="email" name="email" placeholder="Email" required>
+                    <?php echo $account->getError(Constants::$emailsDontMatch); ?>
+                    <?php echo $account->getError(Constants::$emailInvalid); ?>
+                    <?php echo $account->getError(Constants::$emailTaken); ?>
+                    <input type="email" name="email" placeholder="Email" value="<?php getInputValue("email"); ?>" required>
 
-                    <input type="email" name="email2" placeholder="Подтвердите email" required>
+                    <input type="email" name="email2" placeholder="Подтвердите email" value="<?php getInputValue("email2"); ?>" required>
 
+                    <?php echo $account->getError(Constants::$passwordsDontMatch); ?>
+                    <?php echo $account->getError(Constants::$passwordLength); ?>
                     <input type="password" name="password" placeholder="Пароль" required>
 
                     <input type="password" name="password2" placeholder="Подтвердите пароль" required>
